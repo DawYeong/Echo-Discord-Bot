@@ -10,7 +10,7 @@ import {
   EndBehaviorType,
   VoiceReceiver,
 } from "@discordjs/voice";
-import recordVoiceAudio from "../utils/audio_utils";
+import recordVoiceAudio from "../audio_utils/record_voice_audio";
 
 export const summonCommandHandler: CommandHandler = async (interaction) => {
   if (!interaction.guildId) return interaction.reply("Cannot find guild id.");
