@@ -5,6 +5,26 @@ export type CommandHandler = (
   interaction: CommandInteraction
 ) => void | Promise<void> | Promise<InteractionResponse<boolean> | undefined>;
 
+export enum VoiceCommandID {
+  TELL = "tell",
+  GIVE = "give",
+  FLIP = "flip",
+}
+
+// export const commandLengths = {
+//   tell: 3,
+//   give: 7,
+//   flip: 2,
+//   play: 0,
+// };
+
+export type VoiceCommand = {
+  command: VoiceCommandID;
+  parameters: Array<any>;
+};
+
+export type CheckHandler = (tokens: string[]) => void | VoiceCommand;
+
 export enum CommandNames {
   SUMMON = "summon",
   LEAVE = "leave",

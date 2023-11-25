@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 
 async function main() {
   const client = new speech.SpeechClient();
-  const filename = "./out1.mp3";
+  const filename = "./src/audio_utils/test4.mp3";
 
   const file = fs.readFileSync(filename);
   const audioBytes = file.toString("base64");
