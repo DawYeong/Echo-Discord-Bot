@@ -1,10 +1,8 @@
 import speech from "@google-cloud/speech";
 import * as fs from "node:fs";
 
-async function main() {
+const speechToText = async (filename: string): Promise<string> => {
   const client = new speech.SpeechClient();
-  const filename = "./src/audio_utils/test4.mp3";
-
   const file = fs.readFileSync(filename);
   const audioBytes = file.toString("base64");
 
@@ -29,7 +27,7 @@ async function main() {
     .map((result) => result.alternatives[0].transcript)
     .join("\n");
 
-  console.log(`Transcription: ${transcription}`);
-}
+  return transcription;
+};
 
-main().catch(console.error);
+export default speechToText;

@@ -1,9 +1,11 @@
 import { VoiceCommand, VoiceCommandID } from "../models";
-import { flipCommandCheck } from "./command_checkers/flip_check";
-import { giveCommandCheck } from "./command_checkers/give_check";
-import { tellCommandCheck } from "./command_checkers/tell_check";
+import { flipCommand } from "./audio_commands/flip";
+import { giveCommand } from "./audio_commands/give";
+import { tellCommand } from "./audio_commands/tell";
 
-const transcript_parse = (transcript: string): VoiceCommand | void =>
+const transcriptParse = async (
+  transcript: string
+): Promise<VoiceCommand | void> =>
   //: VoiceCommand | undefined
   {
     //   return "hello";
@@ -30,7 +32,7 @@ const transcript_parse = (transcript: string): VoiceCommand | void =>
       // this way of figuring out the commands is a little hacky...
       switch (split[command_start_indices[i] + 1]) {
         case VoiceCommandID.FLIP: {
-          result = flipCommandCheck(
+          result = flipCommand(
             split.slice(
               command_start_indices[i] + 2,
               command_start_indices[i] + 4
@@ -39,7 +41,7 @@ const transcript_parse = (transcript: string): VoiceCommand | void =>
           break;
         }
         case VoiceCommandID.GIVE: {
-          result = giveCommandCheck(
+          result = giveCommand(
             split.slice(
               command_start_indices[i] + 2,
               command_start_indices[i] + 9
@@ -48,7 +50,7 @@ const transcript_parse = (transcript: string): VoiceCommand | void =>
           break;
         }
         case VoiceCommandID.TELL: {
-          result = tellCommandCheck(
+          result = await tellCommand(
             split.slice(
               command_start_indices[i] + 2,
               command_start_indices[i] + 5
@@ -70,22 +72,27 @@ const transcript_parse = (transcript: string): VoiceCommand | void =>
 
 // tests
 
-console.log(
-  transcript_parse(
-    "Echo flip a coin Echo tell me a joke Echo Echo tell Echo flip a Coin Echo flip"
-  )
+transcriptParse(
+  "Echo flip a coin Echo tell me a joke Echo Echo tell Echo flip a Coin Echo flip"
+).then((x) => console.log(x));
+transcriptParse("Echo tell me a joke").then((x) => console.log(x));
+
+transcriptParse("Echo give me a number from 1 to 10").then((x) =>
+  console.log(x)
 );
-console.log(transcript_parse("Echo tell me a joke"));
-console.log(transcript_parse("Echo give me a number from 1 to 10"));
-console.log(transcript_parse("Echo give me a number from 10 to 1"));
-console.log(transcript_parse("Echo give"));
-console.log(transcript_parse("Echo print"));
-console.log(
-  transcript_parse(
-    "Echo tell me a joke Echo Echo tell Echo flip a Coin Echo flip"
-  )
+
+transcriptParse("Echo give me a number from 10 to 1").then((x) =>
+  console.log(x)
 );
+transcriptParse("Echo give").then((x) => console.log(x));
+transcriptParse("Echo print").then((x) => console.log(x));
+
+transcriptParse(
+  "Echo tell me a joke Echo Echo tell Echo flip a Coin Echo flip"
+).then((x) => console.log(x));
 
 // transcript_parse("Echo flip a coin");
 // transcript_parse("Echo tell me a joke");
 // transcript_parse("more yapping more yapping boy rapping Echo flip a coin");
+
+export default transcriptParse;

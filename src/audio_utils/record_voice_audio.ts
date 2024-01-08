@@ -10,7 +10,7 @@ const recordVoiceAudio = (
   userId: string
 ): string | null => {
   const encoder = new OpusEncoder(16000, 1);
-  const fileName = path.join(__dirname, `${userId}-${Date.now()}.mp3`);
+  const filename = path.join(__dirname, `${userId}-${Date.now()}.mp3`);
   const listenStream = receiver.subscribe(userId, {
     end: {
       behavior: EndBehaviorType.AfterSilence,
@@ -18,7 +18,7 @@ const recordVoiceAudio = (
     },
   });
   const decodingStream = new OpusDecodingStream({}, encoder);
-  const fileWriter = new FileWriter(fileName, {
+  const fileWriter = new FileWriter(filename, {
     channels: 1,
     sampleRate: 16000,
   });
@@ -28,8 +28,8 @@ const recordVoiceAudio = (
     if (err) {
       console.log(`Issue recording audio: ${err}`);
     } else {
-      console.log(`Successfully recorded: ${fileName}`);
-      res = fileName;
+      console.log(`Successfully recorded: ${filename}`);
+      res = filename;
     }
   });
   return res;

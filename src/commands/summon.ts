@@ -11,6 +11,8 @@ import {
   VoiceReceiver,
 } from "@discordjs/voice";
 import recordVoiceAudio from "../audio_utils/record_voice_audio";
+import speechToText from "../audio_utils/speech_to_text";
+import transcriptParse from "../audio_utils/transcript_parse";
 
 export const summonCommandHandler: CommandHandler = async (interaction) => {
   if (!interaction.guildId) return interaction.reply("Cannot find guild id.");
@@ -54,13 +56,24 @@ export const summonCommandHandler: CommandHandler = async (interaction) => {
   const receiver = bot_connection.receiver;
 
   receiver.speaking.on("start", async (userId) => {
+    try {
+      const filename = recordVoiceAudio(receiver, userId);
+      if (!filename) return;
+
+      // translate the recording => delete recording after
+      const transcript = await speechToText(filename);
+      console.log(`Transcript: ${transcript}`);
+      if (!transcript) return;
+      // figure out if it is a command => parsing and filtering
+
+      const voiceCommand = transcriptParse(transcript);
+      console.log(`Voice Command: ${voiceCommand}`);
+      if (!voiceCommand) return;
+    } catch (error) {
+    } finally {
+      // remove audio file if created
+    }
     // record voice audio
-    const fileName = recordVoiceAudio(receiver, userId);
-    if (!fileName) return;
-
-    // translate the recording => delete recording after
-
-    // figure out if it is a command => parsing and filtering
   });
 };
 

@@ -11,19 +11,19 @@ export enum VoiceCommandID {
   FLIP = "flip",
 }
 
-// export const commandLengths = {
-//   tell: 3,
-//   give: 7,
-//   flip: 2,
-//   play: 0,
-// };
+export enum TextToSpeechAction {
+  PREGENERATED,
+  GENERATE,
+}
 
 export type VoiceCommand = {
-  command: VoiceCommandID;
-  parameters: Array<any>;
+  action: TextToSpeechAction;
+  value: string;
 };
 
-export type CheckHandler = (tokens: string[]) => void | VoiceCommand;
+export type AudioCommandHandler = (
+  tokens: string[]
+) => void | VoiceCommand | Promise<VoiceCommand>;
 
 export enum CommandNames {
   SUMMON = "summon",
