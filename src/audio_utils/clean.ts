@@ -7,7 +7,7 @@ const cleanAudioFiles = () => {
     if (path.extname(file).slice(1) == "mp3") {
       console.log(file);
       fs.unlink(__dirname + "/" + file, (err) => {
-        // throwing an error will crash the bot
+        // throwing an error will crash the bot => maybe setup some log tracking for this
         if (err) {
           console.log(`Error trying to delete: ${file}, ${err}`);
           return;
