@@ -34,7 +34,7 @@ export const giveCommand: AudioCommandHandler = (tokens) => {
 
   if (!Number.isNaN(x) && !Number.isNaN(y) && x < y) {
     result = {
-      action: TextToSpeechAction.GENERATE,
+      action: TextToSpeechAction.TTS,
       value: Math.floor(Math.random() * (y + 1 - x) + x).toString(),
     };
   }
@@ -42,10 +42,10 @@ export const giveCommand: AudioCommandHandler = (tokens) => {
   return result;
 };
 
-console.log(giveCommand(["me", "a", "number", "between", "x", "and", "y"]));
-console.log(giveCommand(["me", "a", "number", "from", "x", "to", "y"]));
-console.log(giveCommand(["me", "a", "number", "between", "x", "to", "y"]));
-console.log(giveCommand(["me", "a", "number", "from", "x", "and", "y"]));
-console.log(giveCommand(["me", "a", "number", "from", "-5", "to", "5"]));
-console.log(giveCommand(["me", "a", "number", "between", "10", "and", "15"]));
-console.log(giveCommand(["me", "a", "number", "between", "10", "and", "-5"]));
+// console.log(giveCommand(["me", "a", "number", "between", "x", "and", "y"]));
+// console.log(giveCommand(["me", "a", "number", "from", "x", "to", "y"]));
+// console.log(giveCommand(["me", "a", "number", "between", "x", "to", "y"]));
+// console.log(giveCommand(["me", "a", "number", "from", "x", "and", "y"]));
+// console.log(giveCommand(["me", "a", "number", "from", "-5", "to", "5"]));
+// console.log(giveCommand(["me", "a", "number", "between", "10", "and", "15"]));
+// console.log(giveCommand(["me", "a", "number", "between", "10", "and", "-5"]));

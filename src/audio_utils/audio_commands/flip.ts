@@ -18,6 +18,6 @@ export const flipCommand: AudioCommandHandler = (tokens) => {
   return result;
 };
 
-const test = ["flip", "a", "coin"];
+// const test = ["flip", "a", "coin"];
 
-console.log(flipCommand(test.slice(1, 3)));
+// console.log(flipCommand(test.slice(1, 3)));

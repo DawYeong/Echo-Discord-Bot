@@ -1,10 +1,14 @@
+import { AudioPlayer } from "@discordjs/voice";
 import { VoiceCommand, VoiceCommandID } from "../models";
 import { flipCommand } from "./audio_commands/flip";
 import { giveCommand } from "./audio_commands/give";
+import { playCommand } from "./audio_commands/play";
 import { tellCommand } from "./audio_commands/tell";
+import { stopCommand } from "./audio_commands/stop";
 
 const transcriptParse = async (
-  transcript: string
+  transcript: string,
+  player: AudioPlayer
 ): Promise<VoiceCommand | void> =>
   //: VoiceCommand | undefined
   {
@@ -58,6 +62,14 @@ const transcriptParse = async (
           );
           break;
         }
+        case VoiceCommandID.PLAY: {
+          result = await playCommand(split.slice(command_start_indices[i] + 2));
+          break;
+        }
+        case VoiceCommandID.STOP: {
+          stopCommand(player);
+          break;
+        }
         default: {
           break;
         }
@@ -69,30 +81,5 @@ const transcriptParse = async (
     }
     return result;
   };
-
-// tests
-
-transcriptParse(
-  "Echo flip a coin Echo tell me a joke Echo Echo tell Echo flip a Coin Echo flip"
-).then((x) => console.log(x));
-transcriptParse("Echo tell me a joke").then((x) => console.log(x));
-
-transcriptParse("Echo give me a number from 1 to 10").then((x) =>
-  console.log(x)
-);
-
-transcriptParse("Echo give me a number from 10 to 1").then((x) =>
-  console.log(x)
-);
-transcriptParse("Echo give").then((x) => console.log(x));
-transcriptParse("Echo print").then((x) => console.log(x));
-
-transcriptParse(
-  "Echo tell me a joke Echo Echo tell Echo flip a Coin Echo flip"
-).then((x) => console.log(x));
-
-// transcript_parse("Echo flip a coin");
-// transcript_parse("Echo tell me a joke");
-// transcript_parse("more yapping more yapping boy rapping Echo flip a coin");
 
 export default transcriptParse;

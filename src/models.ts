@@ -1,4 +1,4 @@
-import { Transform } from "node:stream";
+import { Readable, Transform } from "node:stream";
 import type { CommandInteraction, InteractionResponse } from "discord.js";
 
 export type CommandHandler = (
@@ -9,16 +9,20 @@ export enum VoiceCommandID {
   TELL = "tell",
   GIVE = "give",
   FLIP = "flip",
+  PLAY = "play",
+  STOP = "stop",
 }
 
 export enum TextToSpeechAction {
   PREGENERATED,
-  GENERATE,
+  TTS,
+  MUSIC,
 }
 
 export type VoiceCommand = {
   action: TextToSpeechAction;
-  value: string;
+  value?: string;
+  stream?: Readable;
 };
 
 export type AudioCommandHandler = (

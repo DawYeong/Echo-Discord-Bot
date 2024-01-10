@@ -23,7 +23,7 @@ client.on("ready", (c) => {
   console.log("The bot is ready.");
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN || "DEFAULT_TOKEN");
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;

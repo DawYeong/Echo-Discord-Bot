@@ -12,7 +12,7 @@ export const tellCommand: AudioCommandHandler = async (tokens) => {
 
   if (JSON.stringify(tokens) == JSON.stringify(TELL_CHECK_STATIC_WORDS)) {
     result = {
-      action: TextToSpeechAction.GENERATE,
+      action: TextToSpeechAction.TTS,
       value: await new Promise((resolve) => {
         giveMeAJoke.getRandomDadJoke(function (joke: any) {
           resolve(joke);
@@ -23,4 +23,4 @@ export const tellCommand: AudioCommandHandler = async (tokens) => {
   return result;
 };
 
-console.log(tellCommand(["me", "a", "joke"]));
+// console.log(tellCommand(["me", "a", "joke"]));
