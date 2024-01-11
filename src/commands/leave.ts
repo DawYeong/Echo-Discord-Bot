@@ -1,6 +1,7 @@
 import { getVoiceConnection } from "@discordjs/voice";
 import { CommandHandler } from "../models";
 import * as ffmpeg from "ffmpeg";
+import cleanAudioFiles from "../audio_utils/clean";
 
 export const leaveCommandHandler: CommandHandler = async (interaction) => {
   if (!interaction.guildId) return interaction.reply("Cannot find guild id.");
@@ -20,11 +21,7 @@ export const leaveCommandHandler: CommandHandler = async (interaction) => {
   if (bot_connection) {
     if (member.voice.channel.id === bot_connection.joinConfig.channelId) {
       bot_connection.disconnect();
-      //   const process = new ffmpeg("out.pcm");
-      //   process.then(function (audio: any) {
-      //     audio.fnExtractSoundToMP3("out.pcm");
-      //   });
-
+      cleanAudioFiles();
       return interaction.reply("Goodbye!");
     } else {
       return interaction.reply(

@@ -64,12 +64,6 @@ export const summonCommandHandler: CommandHandler = async (interaction) => {
   const player = createAudioPlayer();
   bot_connection.subscribe(player);
 
-  player.play(
-    createAudioResource(
-      "/home/bdylamubuntu/projects/Echo/src/audio_utils/audio_commands/youtube-1704837912629.mp3"
-    )
-  );
-
   receiver.speaking.on("start", async (userId) => {
     let bot_output: string | Readable | null = null;
     let user_file = null;
@@ -116,15 +110,9 @@ export const summonCommandHandler: CommandHandler = async (interaction) => {
       console.log(`bot_output: ${bot_output}`);
       console.log(player.state);
       player.play(createAudioResource(bot_output));
-      player.once(AudioPlayerStatus.Idle, () => {
-        // clear
-        console.log("Audio DONE!");
-        cleanAudioFiles();
-      });
     } catch (error) {
-    } finally {
-      // remove audio file if created
+      console.log(error);
+      cleanAudioFiles();
     }
-    // record voice audio
   });
 };

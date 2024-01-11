@@ -4,6 +4,9 @@ import { pipeline } from "node:stream";
 import { OpusEncoder } from "@discordjs/opus";
 import { FileWriter } from "wav";
 import * as path from "path";
+import * as fs from "fs";
+
+const getMP3Duration = require("get-mp3-duration");
 
 const recordVoiceAudio = async (
   receiver: VoiceReceiver,
@@ -34,6 +37,20 @@ const recordVoiceAudio = async (
       }
     });
   });
+
+  const buf = fs.readFileSync(filename);
+  const duration = getMP3Duration(buf);
+  console.log(`duration: ${duration} ms`);
+
+  if (duration <= 100) {
+    fs.unlink(filename, (err) => {
+      if (err) {
+        console.log(`Record audio file remove error: ${err}`);
+      }
+    });
+    res = null;
+  }
+
   return res;
 };
 
