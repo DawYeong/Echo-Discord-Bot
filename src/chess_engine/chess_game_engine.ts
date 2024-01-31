@@ -1,19 +1,44 @@
-import { ChessPieceState, Moves, Piece } from "./utils/chess_models";
+import {
+  ChessPieceState,
+  CollisionEvent,
+  Moves,
+  Piece,
+  PieceAction,
+} from "./utils/chess_models";
 import MoveGenerator from "./move_generator";
+import BoardVisualizer from "./board_visualizer";
+import {
+  BISHOP_DIRECTIONS,
+  KNIGHT_DIRECTIONS,
+  NUMBER_TO_COL_MAP,
+  NUMBER_TO_ROW_MAP,
+  ROOK_DIRECTIONS,
+  getCollision,
+  isLocationInBounds,
+} from "./utils/chess_utils";
 
 class ChessGameEngine {
   private board: Map<string, ChessPieceState> = new Map<
     string,
     ChessPieceState
   >();
-  private turn: boolean; // true: Black move, false: White move
+  public turn: boolean; // true: Black move, false: White move
   //   private
-  private valid_moves: Map<string, Array<string>>;
+  public valid_moves: Map<string, [string, PieceAction][]>;
 
   private prev_move: [Piece, string, string] | null;
 
+  private board_visualizer: BoardVisualizer;
+
+  private king_pos: Array<string>;
+
+  private selected_pos: string;
+
   constructor() {
     this.initializeBoard();
+    this.board_visualizer = new BoardVisualizer(this.board);
+    this.king_pos = ["4,7", "4,0"];
+    this.selected_pos = null;
   }
 
   private initializeBoard() {
@@ -94,20 +119,229 @@ class ChessGameEngine {
     return moves;
   }
 
-  private generateAllValidMoves() {
-    // this.valid_move_set =
+  private isKingSafe(
+    board: Map<string, ChessPieceState>,
+    king_move?: string
+  ): boolean {
+    const king_pos = (king_move ? king_move : this.king_pos[+this.turn])
+      .split(",")
+      .map((x) => Number(x));
+    let new_location: number[];
+    let collision: CollisionEvent;
+    let piece: ChessPieceState;
+
+    // check vertical and horizontal: ROOK, QUEEN
+    for (const dir of ROOK_DIRECTIONS) {
+      for (let i = 1; i < 8; i++) {
+        new_location = [king_pos[0] + dir[0] * i, king_pos[1] + dir[1] * i];
+        collision = getCollision(board, new_location.join(","), this.turn);
+
+        if (isLocationInBounds(new_location)) {
+          if (collision != CollisionEvent.NO_COLLISION) {
+            piece = board.get(new_location.join(","));
+            if (
+              collision == CollisionEvent.OPPONENT &&
+              (piece.piece_type == Piece.ROOK ||
+                piece.piece_type == Piece.QUEEN)
+            ) {
+              return false;
+            }
+            break;
+          }
+        } else break;
+      }
+    }
+
+    // check diagonals: BISHOP, QUEEN, PAWN (1 away)
+    for (const dir of BISHOP_DIRECTIONS) {
+      for (let i = 1; i < 8; i++) {
+        new_location = [king_pos[0] + dir[0] * i, king_pos[1] + dir[1] * i];
+        collision = getCollision(board, new_location.join(","), this.turn);
+
+        if (isLocationInBounds(new_location)) {
+          if (collision != CollisionEvent.NO_COLLISION) {
+            piece = board.get(new_location.join(","));
+            if (
+              collision == CollisionEvent.OPPONENT &&
+              (piece.piece_type == Piece.BISHOP ||
+                piece.piece_type == Piece.QUEEN ||
+                (piece.piece_type == Piece.PAWN && i == 1))
+            ) {
+              return false;
+            }
+            break;
+          }
+        } else break;
+      }
+    }
+
+    // check KNIGHT
+    for (const dir of KNIGHT_DIRECTIONS) {
+      new_location = [king_pos[0] + dir[0], king_pos[1] + dir[1]];
+      collision = getCollision(board, new_location.join(","), this.turn);
+      piece = board.get(new_location.join(","));
+      if (
+        isLocationInBounds(new_location) &&
+        collision == CollisionEvent.OPPONENT &&
+        piece.piece_type == Piece.KNIGHT
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public generateAllValidMoves() {
+    this.valid_moves = new Map<string, [string, PieceAction][]>();
+    const all_moves: Moves = this.generateAllMoves();
+    let to_from: [string, string, PieceAction];
+    all_moves.forEach((move) => {
+      const temp_map = new Map(this.board);
+      const piece = temp_map.get(move[0]);
+      switch (move[2]) {
+        case PieceAction.STANDARD: {
+          // move piece to new location
+          temp_map.set(move[1], piece);
+          temp_map.delete(move[0]);
+          to_from = [move[0], move[1], move[2]];
+          break;
+        }
+        case PieceAction.EN_PASSANT: {
+          // move pawn behind enemy piece and take piece
+          const new_loc = move[1].split(",").map((x) => Number(x));
+          const opp_loc = [new_loc[0], new_loc[1] + (this.turn ? -1 : 1)].join(
+            ","
+          );
+          // const piece = temp_map.get(move[0]);
+          temp_map.set(move[1], piece);
+          temp_map.delete(move[0]);
+          temp_map.delete(opp_loc);
+          to_from = [move[0], move[1], move[2]];
+          break;
+        }
+        case PieceAction.CASTLE: {
+          // moves king over by 2 and rock to the opposite of king
+          const king_loc = move[0].split(",").map((x) => Number(x));
+          const rook_loc = move[1].split(",").map((x) => Number(x));
+          // const king_piece = temp_map.get(move[0]);
+          const rook_piece = temp_map.get(move[1]);
+          const new_king_loc = [
+            king_loc[0] + (king_loc[0] > rook_loc[0] ? -2 : 2),
+            king_loc[1],
+          ].join(",");
+
+          temp_map.set(new_king_loc, piece);
+          temp_map.set(
+            [
+              king_loc[0] + (king_loc[0] > rook_loc[0] ? -1 : 1),
+              king_loc[1],
+            ].join(","),
+            rook_piece
+          );
+
+          temp_map.delete(move[0]);
+          temp_map.delete(move[1]);
+          to_from = [move[0], new_king_loc, move[2]];
+          break;
+        }
+      }
+      if (
+        this.isKingSafe(
+          temp_map,
+          piece.piece_type == Piece.KING ? to_from[1] : null
+        )
+      ) {
+        // valid move, add to move set
+        if (this.valid_moves.has(to_from[0])) {
+          this.valid_moves.get(to_from[0]).push([to_from[1], to_from[2]]);
+        } else {
+          this.valid_moves.set(to_from[0], [[to_from[1], to_from[2]]]);
+        }
+      }
+    });
   }
 
   public printBoard() {
     console.log(this.board);
   }
 
-  // attempt to move, if not in valid set, return false
-  public move(): boolean {
-    return false;
+  public getValidPieces(): string[] {
+    const piece_entries: string[] = [];
+    this.valid_moves.forEach((_, key) => {
+      const pos = key.split(",");
+      const piece = this.board.get(key);
+      piece_entries.push(
+        `${NUMBER_TO_COL_MAP[pos[0]]}${NUMBER_TO_ROW_MAP[pos[1]]} ${
+          piece.piece_type
+        }`
+      );
+    });
+    return piece_entries;
+  }
+
+  public getPieceMoves(piece: string): string[] {
+    console.log(this.valid_moves.get(piece));
+    const piece_moves: string[] = this.valid_moves.get(piece).map((val) => {
+      const loc = val[0].split(",");
+      return `${NUMBER_TO_COL_MAP[loc[0]]}${NUMBER_TO_ROW_MAP[loc[1]]}`;
+    });
+    return piece_moves;
+  }
+
+  public selectPiece(location: string) {
+    const piece_moves = this.valid_moves.get(location);
+
+    this.board_visualizer.drawBoard(
+      this.board,
+      location,
+      piece_moves.map((x) => x[0])
+    );
+    this.selected_pos = location;
+  }
+
+  public move(move_location: string) {
+    // get move from valid_moves
+    const move = this.valid_moves
+      .get(this.selected_pos)
+      .find((x) => x[0] == move_location);
+    const piece = this.board.get(this.selected_pos);
+    piece.num_of_moves += 1;
+    switch (move[1]) {
+      case PieceAction.STANDARD: {
+        //move
+        this.board.set(move[0], piece);
+        this.board.delete(this.selected_pos);
+        break;
+      }
+      case PieceAction.EN_PASSANT: {
+        const new_loc = move[0].split(",").map((x) => Number(x));
+        const opp_loc = [new_loc[0], new_loc[1] + (this.turn ? -1 : 1)].join(
+          ","
+        );
+        // const piece = this.board.get(move[0]);
+        this.board.set(move_location, piece);
+        this.board.delete(this.selected_pos);
+        this.board.delete(opp_loc);
+        break;
+      }
+      case PieceAction.CASTLE: {
+        break;
+      }
+    }
+    this.turn = !this.turn;
+    this.prev_move = [piece.piece_type, this.selected_pos, move_location];
+  }
+
+  public display(): string {
+    return this.board_visualizer.drawBoard(this.board);
   }
 }
 
-const cge: ChessGameEngine = new ChessGameEngine();
+export default ChessGameEngine;
 
-cge.printBoard();
+// const cge = new ChessGameEngine();
+// // cge.display();
+// cge.generateAllValidMoves();
+// console.log(cge.getValidPieces());
+// cge.selectPiece("1,7");

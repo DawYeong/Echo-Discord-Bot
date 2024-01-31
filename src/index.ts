@@ -7,6 +7,7 @@ import { summonCommandHandler } from "./commands/summon";
 import { leaveCommandHandler } from "./commands/leave";
 
 import * as utils from "./models";
+import { chessCommandHandler } from "./commands/chess";
 
 const client = new Client({
   intents: [
@@ -35,6 +36,10 @@ client.on("interactionCreate", async (interaction) => {
     }
     case utils.CommandNames.LEAVE: {
       await leaveCommandHandler(interaction);
+      break;
+    }
+    case utils.CommandNames.CHESS: {
+      await chessCommandHandler(interaction);
       break;
     }
     default: {

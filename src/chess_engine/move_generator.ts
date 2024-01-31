@@ -6,6 +6,7 @@ import {
   PieceAction,
 } from "./utils/chess_models";
 import {
+  isLocationInBounds,
   getCollision,
   ROOK_DIRECTIONS,
   BISHOP_DIRECTIONS,
@@ -22,12 +23,6 @@ class MoveGenerator {
   ) {
     this.curr_board_state = board;
     this.prev_move = prev_move;
-  }
-
-  private isLocationInBounds(location: number[]): boolean {
-    return (
-      location[0] >= 0 && location[0] < 8 && location[1] >= 0 && location[1] < 8
-    );
   }
 
   private getBackLineMoves(
@@ -53,7 +48,7 @@ class MoveGenerator {
         );
 
         if (
-          this.isLocationInBounds(new_location) &&
+          isLocationInBounds(new_location) &&
           collision != CollisionEvent.TEAM
         ) {
           moves.push([location, new_location.join(","), PieceAction.STANDARD]);
@@ -77,7 +72,7 @@ class MoveGenerator {
     // standard movement move up once or twice
     let new_location = [coords[0], coords[1] + direction];
     if (
-      this.isLocationInBounds(new_location) &&
+      isLocationInBounds(new_location) &&
       getCollision(
         this.curr_board_state,
         new_location.join(","),
@@ -90,7 +85,7 @@ class MoveGenerator {
     if (piece.num_of_moves == 0) {
       new_location = [coords[0], coords[1] + direction * 2];
       if (
-        this.isLocationInBounds(new_location) &&
+        isLocationInBounds(new_location) &&
         getCollision(
           this.curr_board_state,
           new_location.join(","),
@@ -117,8 +112,11 @@ class MoveGenerator {
     [direction, -direction].forEach((dir) => {
       new_location = [coords[0] + dir, coords[1] + direction];
       const en_passant_location = [coords[0] + dir, coords[1]];
+      // console.log(
+      //   `new_location: ${new_location}, en_passant: ${en_passant_location}`
+      // );
       if (
-        this.isLocationInBounds(new_location) &&
+        isLocationInBounds(new_location) &&
         getCollision(
           this.curr_board_state,
           new_location.join(","),
@@ -132,17 +130,19 @@ class MoveGenerator {
         ]);
 
       if (
-        this.isLocationInBounds(en_passant_location) &&
+        isLocationInBounds(en_passant_location) &&
         this.prev_move[0] == Piece.PAWN &&
         this.prev_move[2] == en_passant_location.join(",") &&
         distance_traveled[0] == 0 &&
         distance_traveled[1] == 2
-      )
+      ) {
+        console.log(`HERE: ${new_location}, ${en_passant_location}`);
         pawn_moves.push([
           location,
           new_location.join(","),
           PieceAction.EN_PASSANT,
         ]);
+      }
     });
 
     return pawn_moves;

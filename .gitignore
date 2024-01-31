@@ -2,3 +2,4 @@ node_modules/
 *.mp3
 !src/audio_utils/pre_generated/*
 .env
+*.png

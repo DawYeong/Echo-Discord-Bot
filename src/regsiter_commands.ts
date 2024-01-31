@@ -12,6 +12,10 @@ const COMMANDS = [
     name: "leave",
     description: "Makes Echo bot leave voice channel.",
   },
+  {
+    name: "chess",
+    description: "Plays chess",
+  },
 ];
 
 const rest = new REST({ version: "10" }).setToken(
