@@ -142,7 +142,8 @@ class ChessGameEngine {
             if (
               collision == CollisionEvent.OPPONENT &&
               (piece.piece_type == Piece.ROOK ||
-                piece.piece_type == Piece.QUEEN)
+                piece.piece_type == Piece.QUEEN ||
+                (piece.piece_type == Piece.KING && i == 1))
             ) {
               return false;
             }
@@ -165,7 +166,9 @@ class ChessGameEngine {
               collision == CollisionEvent.OPPONENT &&
               (piece.piece_type == Piece.BISHOP ||
                 piece.piece_type == Piece.QUEEN ||
-                (piece.piece_type == Piece.PAWN && i == 1))
+                ((piece.piece_type == Piece.PAWN ||
+                  piece.piece_type == Piece.KING) &&
+                  i == 1))
             ) {
               return false;
             }
@@ -199,64 +202,35 @@ class ChessGameEngine {
     all_moves.forEach((move) => {
       const temp_map = new Map(this.board);
       const piece = temp_map.get(move[0]);
-      switch (move[2]) {
-        case PieceAction.STANDARD: {
-          // move piece to new location
-          temp_map.set(move[1], piece);
-          temp_map.delete(move[0]);
-          to_from = [move[0], move[1], move[2]];
-          break;
-        }
-        case PieceAction.EN_PASSANT: {
-          // move pawn behind enemy piece and take piece
-          const new_loc = move[1].split(",").map((x) => Number(x));
-          const opp_loc = [new_loc[0], new_loc[1] + (this.turn ? -1 : 1)].join(
-            ","
-          );
-          // const piece = temp_map.get(move[0]);
-          temp_map.set(move[1], piece);
-          temp_map.delete(move[0]);
-          temp_map.delete(opp_loc);
-          to_from = [move[0], move[1], move[2]];
-          break;
-        }
-        case PieceAction.CASTLE: {
-          // moves king over by 2 and rock to the opposite of king
-          const king_loc = move[0].split(",").map((x) => Number(x));
-          const rook_loc = move[1].split(",").map((x) => Number(x));
-          // const king_piece = temp_map.get(move[0]);
-          const rook_piece = temp_map.get(move[1]);
-          const new_king_loc = [
-            king_loc[0] + (king_loc[0] > rook_loc[0] ? -2 : 2),
-            king_loc[1],
-          ].join(",");
 
-          temp_map.set(new_king_loc, piece);
-          temp_map.set(
-            [
-              king_loc[0] + (king_loc[0] > rook_loc[0] ? -1 : 1),
-              king_loc[1],
-            ].join(","),
-            rook_piece
-          );
-
-          temp_map.delete(move[0]);
-          temp_map.delete(move[1]);
-          to_from = [move[0], new_king_loc, move[2]];
-          break;
-        }
+      if (move[2] == PieceAction.CASTLE && !this.isKingSafe(temp_map)) {
+        return;
       }
+
+      // move piece to new location
+      temp_map.set(move[1], piece);
+      temp_map.delete(move[0]);
+
+      if (move[2] == PieceAction.EN_PASSANT) {
+        // move pawn behind enemy piece and take piece
+        const new_loc = move[1].split(",").map((x) => Number(x));
+        const opp_loc = [new_loc[0], new_loc[1] + (this.turn ? -1 : 1)].join(
+          ","
+        );
+        temp_map.delete(opp_loc);
+      }
+
       if (
         this.isKingSafe(
           temp_map,
-          piece.piece_type == Piece.KING ? to_from[1] : null
+          piece.piece_type == Piece.KING ? move[1] : null
         )
       ) {
         // valid move, add to move set
-        if (this.valid_moves.has(to_from[0])) {
-          this.valid_moves.get(to_from[0]).push([to_from[1], to_from[2]]);
+        if (this.valid_moves.has(move[0])) {
+          this.valid_moves.get(move[0]).push([move[1], move[2]]);
         } else {
-          this.valid_moves.set(to_from[0], [[to_from[1], to_from[2]]]);
+          this.valid_moves.set(move[0], [[move[1], move[2]]]);
         }
       }
     });
@@ -307,6 +281,10 @@ class ChessGameEngine {
       .find((x) => x[0] == move_location);
     const piece = this.board.get(this.selected_pos);
     piece.num_of_moves += 1;
+
+    if (piece.piece_type == Piece.KING)
+      this.king_pos[+this.turn] = move_location;
+
     switch (move[1]) {
       case PieceAction.STANDARD: {
         //move
@@ -326,11 +304,31 @@ class ChessGameEngine {
         break;
       }
       case PieceAction.CASTLE: {
+        // move king
+        this.board.set(move_location, piece);
+        this.board.delete(this.selected_pos);
+
+        // move rook
+        const king_loc = this.selected_pos.split(",").map((x) => Number(x));
+        const new_king_loc = move_location.split(",").map((x) => Number(x));
+        const rook_loc = [
+          king_loc[0] > new_king_loc[0] ? 0 : 7,
+          king_loc[1],
+        ].join(",");
+        const new_rook_loc = [
+          king_loc[0] + (king_loc[0] > new_king_loc[0] ? -1 : 1),
+          king_loc[1],
+        ].join(",");
+
+        const rook_piece = this.board.get(rook_loc);
+        this.board.set(new_rook_loc, rook_piece);
+        this.board.delete(rook_loc);
         break;
       }
     }
     this.turn = !this.turn;
     this.prev_move = [piece.piece_type, this.selected_pos, move_location];
+    console.log(this.king_pos);
   }
 
   public display(): string {

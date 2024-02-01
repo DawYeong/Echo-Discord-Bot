@@ -82,7 +82,7 @@ class MoveGenerator {
       pawn_moves.push([location, new_location.join(","), PieceAction.STANDARD]);
 
     // move 2 spots
-    if (piece.num_of_moves == 0) {
+    if (piece.num_of_moves == 0 && pawn_moves.length) {
       new_location = [coords[0], coords[1] + direction * 2];
       if (
         isLocationInBounds(new_location) &&
@@ -190,10 +190,18 @@ class MoveGenerator {
       });
 
       if (this.checkCastle(left_pieces, piece))
-        king_moves.push([location, left_pieces[0][0], PieceAction.CASTLE]);
+        king_moves.push([
+          location,
+          [curr_location[0] - 2, curr_location[1]].join(","),
+          PieceAction.CASTLE,
+        ]);
 
       if (this.checkCastle(right_pieces, piece))
-        king_moves.push([location, right_pieces[0][0], PieceAction.CASTLE]);
+        king_moves.push([
+          location,
+          [curr_location[0] + 2, curr_location[1]].join(","),
+          PieceAction.CASTLE,
+        ]);
     }
 
     return king_moves;
